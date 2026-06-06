@@ -7,10 +7,21 @@ on:
       - "codex/**"
   pull_request:
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: APK build type
+        required: true
+        default: debug
+        type: choice
+        options:
+          - debug
+          - release
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      BUILD_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.build_type || 'debug' }}
 
     steps:
       - name: Checkout
@@ -35,11 +46,16 @@ jobs:
           yes | sdkmanager --licenses
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Build debug APK
-        run: gradle :android:app:assembleDebug --no-daemon
+      - name: Build APK
+        run: |
+          if [ "$BUILD_TYPE" = "release" ]; then
+            gradle :android:app:assembleRelease --no-daemon
+          else
+            gradle :android:app:assembleDebug --no-daemon
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: dandanplay-subtitle-downloader-debug-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: dandanplay-subtitle-downloader-${{ env.BUILD_TYPE }}-apk
+          path: android/app/build/outputs/apk/${{ env.BUILD_TYPE }}/*.apk
