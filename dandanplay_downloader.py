@@ -20,6 +20,22 @@ API_BASE = "https://api.dandanplay.net"
 CONFIG_FILE = "config.json"
 DEFAULT_INTERVAL_SECONDS = 1.5
 
+THEME = {
+    "window": "#f3f6fb",
+    "surface": "#ffffff",
+    "surface_alt": "#eef4fb",
+    "line": "#d8e1ec",
+    "line_strong": "#bccadd",
+    "text": "#182230",
+    "muted": "#667085",
+    "primary": "#2563eb",
+    "primary_hover": "#1d4ed8",
+    "accent": "#0f766e",
+    "accent_hover": "#115e59",
+    "log_bg": "#101828",
+    "log_fg": "#d0d5dd",
+}
+
 
 class ApiError(Exception):
     pass
@@ -148,8 +164,8 @@ class DownloaderApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title(APP_NAME)
-        self.geometry("1080x720")
-        self.minsize(980, 640)
+        self.geometry("1180x780")
+        self.minsize(1040, 680)
 
         self.config_data = self.load_config()
         self.anime_results = []
@@ -158,6 +174,7 @@ class DownloaderApp(tk.Tk):
         self.log_queue = queue.Queue()
         self.worker = None
 
+        self.setup_styles()
         self.create_widgets()
         self.after(100, self.drain_log_queue)
 
@@ -206,12 +223,114 @@ class DownloaderApp(tk.Tk):
         atomic_write_json(Path(CONFIG_FILE), self.config_data)
         self.log("配置已保存。")
 
+    def setup_styles(self):
+        self.configure(background=THEME["window"])
+        self.option_add("*Font", ("Microsoft YaHei UI", 10))
+        self.option_add("*TCombobox*Listbox.font", ("Microsoft YaHei UI", 10))
+
+        style = ttk.Style(self)
+        if "clam" in style.theme_names():
+            style.theme_use("clam")
+
+        style.configure(".", font=("Microsoft YaHei UI", 10))
+        style.configure("TFrame", background=THEME["window"])
+        style.configure("Surface.TFrame", background=THEME["surface"])
+        style.configure("Hero.TFrame", background=THEME["window"])
+        style.configure("TLabel", background=THEME["window"], foreground=THEME["text"])
+        style.configure("Surface.TLabel", background=THEME["surface"], foreground=THEME["text"])
+        style.configure("Muted.TLabel", background=THEME["window"], foreground=THEME["muted"])
+        style.configure("SurfaceMuted.TLabel", background=THEME["surface"], foreground=THEME["muted"])
+        style.configure("HeroTitle.TLabel", background=THEME["window"], foreground=THEME["text"], font=("Microsoft YaHei UI", 20, "bold"))
+        style.configure("HeroSubtitle.TLabel", background=THEME["window"], foreground=THEME["muted"], font=("Microsoft YaHei UI", 10))
+        style.configure("Section.TLabelframe", background=THEME["surface"], bordercolor=THEME["line"], relief="solid")
+        style.configure(
+            "Section.TLabelframe.Label",
+            background=THEME["surface"],
+            foreground=THEME["text"],
+            font=("Microsoft YaHei UI", 10, "bold"),
+        )
+        style.configure("Detail.TLabel", background=THEME["surface"], foreground=THEME["text"], font=("Microsoft YaHei UI", 10))
+        style.configure(
+            "TEntry",
+            fieldbackground="#fbfdff",
+            foreground=THEME["text"],
+            bordercolor=THEME["line"],
+            lightcolor=THEME["line"],
+            darkcolor=THEME["line"],
+            padding=(10, 7),
+        )
+        style.map("TEntry", bordercolor=[("focus", THEME["primary"])])
+        style.configure(
+            "TCombobox",
+            fieldbackground="#fbfdff",
+            background="#fbfdff",
+            foreground=THEME["text"],
+            bordercolor=THEME["line"],
+            arrowcolor=THEME["muted"],
+            padding=(8, 5),
+        )
+        style.map("TCombobox", bordercolor=[("focus", THEME["primary"])])
+        style.configure(
+            "TSpinbox",
+            fieldbackground="#fbfdff",
+            foreground=THEME["text"],
+            bordercolor=THEME["line"],
+            padding=(8, 5),
+        )
+        style.configure("TCheckbutton", background=THEME["surface"], foreground=THEME["text"], padding=(4, 3))
+        style.configure("TRadiobutton", background=THEME["surface"], foreground=THEME["text"], padding=(4, 3))
+        style.configure(
+            "TButton",
+            background="#e8eef6",
+            foreground=THEME["text"],
+            bordercolor=THEME["line"],
+            focusthickness=0,
+            padding=(14, 8),
+        )
+        style.map("TButton", background=[("active", "#dde7f3"), ("pressed", "#ccd9ea")])
+        style.configure(
+            "Accent.TButton",
+            background=THEME["primary"],
+            foreground="#ffffff",
+            bordercolor=THEME["primary"],
+            padding=(18, 9),
+            font=("Microsoft YaHei UI", 10, "bold"),
+        )
+        style.map("Accent.TButton", background=[("active", THEME["primary_hover"]), ("pressed", "#1e40af")], foreground=[("disabled", "#ffffff")])
+        style.configure(
+            "Success.TButton",
+            background=THEME["accent"],
+            foreground="#ffffff",
+            bordercolor=THEME["accent"],
+            padding=(18, 9),
+            font=("Microsoft YaHei UI", 10, "bold"),
+        )
+        style.map("Success.TButton", background=[("active", THEME["accent_hover"]), ("pressed", "#134e4a")])
+        style.configure("Tool.TButton", padding=(12, 7))
+        style.configure("TPanedwindow", background=THEME["window"])
+        style.configure("Vertical.TScrollbar", background="#d7e0eb", troughcolor=THEME["surface_alt"], bordercolor=THEME["surface_alt"], arrowcolor=THEME["muted"])
+
     def create_widgets(self):
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(2, weight=1)
+        self.rowconfigure(0, weight=1)
 
-        settings = ttk.LabelFrame(self, text="开放平台认证")
-        settings.grid(row=0, column=0, sticky="ew", padx=10, pady=(10, 6))
+        page = ttk.Frame(self)
+        page.grid(row=0, column=0, sticky="nsew", padx=20, pady=18)
+        page.columnconfigure(0, weight=1)
+        page.rowconfigure(3, weight=1)
+
+        header = ttk.Frame(page, style="Hero.TFrame")
+        header.grid(row=0, column=0, sticky="ew", pady=(0, 14))
+        header.columnconfigure(0, weight=1)
+        ttk.Label(header, text=APP_NAME, style="HeroTitle.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            header,
+            text="搜索番剧、选择剧集，并批量保存弹幕 JSON 与 Bilibili XML。",
+            style="HeroSubtitle.TLabel",
+        ).grid(row=1, column=0, sticky="w", pady=(4, 0))
+
+        settings = ttk.LabelFrame(page, text="开放平台认证", style="Section.TLabelframe", padding=(14, 10, 14, 12))
+        settings.grid(row=1, column=0, sticky="ew", pady=(0, 12))
         settings.columnconfigure(1, weight=1)
         settings.columnconfigure(3, weight=1)
 
@@ -219,66 +338,87 @@ class DownloaderApp(tk.Tk):
         self.app_secret_var = tk.StringVar(value=self.config_data.get("app_secret", ""))
         self.auth_mode_var = tk.StringVar(value=self.config_data.get("auth_mode", "signature"))
 
-        ttk.Label(settings, text="AppId").grid(row=0, column=0, padx=8, pady=8, sticky="w")
-        ttk.Entry(settings, textvariable=self.app_id_var).grid(row=0, column=1, padx=8, pady=8, sticky="ew")
-        ttk.Label(settings, text="AppSecret").grid(row=0, column=2, padx=8, pady=8, sticky="w")
-        ttk.Entry(settings, textvariable=self.app_secret_var, show="*").grid(row=0, column=3, padx=8, pady=8, sticky="ew")
-        ttk.Radiobutton(settings, text="签名模式", variable=self.auth_mode_var, value="signature").grid(row=0, column=4, padx=8)
-        ttk.Radiobutton(settings, text="凭证模式", variable=self.auth_mode_var, value="credential").grid(row=0, column=5, padx=8)
-        ttk.Button(settings, text="保存配置", command=self.save_config).grid(row=0, column=6, padx=8, pady=8)
+        ttk.Label(settings, text="AppId", style="Surface.TLabel").grid(row=0, column=0, padx=(0, 8), pady=7, sticky="w")
+        ttk.Entry(settings, textvariable=self.app_id_var).grid(row=0, column=1, padx=(0, 14), pady=7, sticky="ew")
+        ttk.Label(settings, text="AppSecret", style="Surface.TLabel").grid(row=0, column=2, padx=(0, 8), pady=7, sticky="w")
+        ttk.Entry(settings, textvariable=self.app_secret_var, show="*").grid(row=0, column=3, padx=(0, 14), pady=7, sticky="ew")
+        ttk.Radiobutton(settings, text="签名模式", variable=self.auth_mode_var, value="signature").grid(row=0, column=4, padx=(0, 8), pady=7)
+        ttk.Radiobutton(settings, text="凭证模式", variable=self.auth_mode_var, value="credential").grid(row=0, column=5, padx=(0, 12), pady=7)
+        ttk.Button(settings, text="保存配置", style="Tool.TButton", command=self.save_config).grid(row=0, column=6, pady=7)
 
-        search_frame = ttk.Frame(self)
-        search_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=6)
+        search_frame = ttk.Frame(page)
+        search_frame.grid(row=2, column=0, sticky="ew", pady=(0, 12))
         search_frame.columnconfigure(1, weight=1)
         self.keyword_var = tk.StringVar()
-        ttk.Label(search_frame, text="番剧关键词").grid(row=0, column=0, padx=(0, 8), sticky="w")
+        ttk.Label(search_frame, text="番剧关键词").grid(row=0, column=0, padx=(0, 10), sticky="w")
         keyword_entry = ttk.Entry(search_frame, textvariable=self.keyword_var)
         keyword_entry.grid(row=0, column=1, sticky="ew")
         keyword_entry.bind("<Return>", lambda _event: self.search())
-        ttk.Button(search_frame, text="搜索", command=self.search).grid(row=0, column=2, padx=(8, 0))
+        ttk.Button(search_frame, text="搜索", style="Accent.TButton", command=self.search).grid(row=0, column=2, padx=(10, 0))
 
-        main = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
-        main.grid(row=2, column=0, sticky="nsew", padx=10, pady=6)
+        main = ttk.PanedWindow(page, orient=tk.HORIZONTAL)
+        main.grid(row=3, column=0, sticky="nsew")
 
-        left = ttk.Frame(main)
+        left = ttk.LabelFrame(main, text="搜索结果", style="Section.TLabelframe", padding=(10, 8, 10, 10))
         left.columnconfigure(0, weight=1)
         left.rowconfigure(0, weight=1)
-        self.result_list = tk.Listbox(left, exportselection=False)
+        self.result_list = tk.Listbox(
+            left,
+            exportselection=False,
+            activestyle="none",
+            bd=0,
+            bg=THEME["surface"],
+            fg=THEME["text"],
+            highlightthickness=1,
+            highlightbackground=THEME["line"],
+            highlightcolor=THEME["primary"],
+            relief=tk.FLAT,
+            selectbackground=THEME["primary"],
+            selectforeground="#ffffff",
+            font=("Microsoft YaHei UI", 10),
+        )
         self.result_list.grid(row=0, column=0, sticky="nsew")
         self.result_list.bind("<<ListboxSelect>>", lambda _event: self.load_selected_bangumi())
         left_scroll = ttk.Scrollbar(left, orient="vertical", command=self.result_list.yview)
-        left_scroll.grid(row=0, column=1, sticky="ns")
+        left_scroll.grid(row=0, column=1, sticky="ns", padx=(8, 0))
         self.result_list.configure(yscrollcommand=left_scroll.set)
         main.add(left, weight=1)
 
-        right = ttk.Frame(main)
+        right = ttk.LabelFrame(main, text="番剧与剧集", style="Section.TLabelframe", padding=(12, 8, 12, 10))
         right.columnconfigure(0, weight=1)
         right.rowconfigure(2, weight=1)
         self.detail_var = tk.StringVar(value="搜索并选择一个番剧。")
-        ttk.Label(right, textvariable=self.detail_var, wraplength=650, justify="left").grid(row=0, column=0, sticky="ew", pady=(0, 6))
+        self.detail_label = ttk.Label(right, textvariable=self.detail_var, style="Detail.TLabel", wraplength=650, justify="left")
+        self.detail_label.grid(row=0, column=0, sticky="ew", pady=(0, 10))
 
-        select_buttons = ttk.Frame(right)
-        select_buttons.grid(row=1, column=0, sticky="ew", pady=(0, 6))
-        ttk.Button(select_buttons, text="全选", command=lambda: self.set_all_episodes(True)).pack(side=tk.LEFT)
-        ttk.Button(select_buttons, text="全不选", command=lambda: self.set_all_episodes(False)).pack(side=tk.LEFT, padx=8)
+        select_buttons = ttk.Frame(right, style="Surface.TFrame")
+        select_buttons.grid(row=1, column=0, sticky="ew", pady=(0, 10))
+        ttk.Button(select_buttons, text="全选", style="Tool.TButton", command=lambda: self.set_all_episodes(True)).pack(side=tk.LEFT)
+        ttk.Button(select_buttons, text="全不选", style="Tool.TButton", command=lambda: self.set_all_episodes(False)).pack(side=tk.LEFT, padx=8)
 
-        episode_holder = ttk.Frame(right)
+        episode_holder = ttk.Frame(right, style="Surface.TFrame")
         episode_holder.grid(row=2, column=0, sticky="nsew")
         episode_holder.columnconfigure(0, weight=1)
         episode_holder.rowconfigure(0, weight=1)
-        self.episode_canvas = tk.Canvas(episode_holder, highlightthickness=0)
-        self.episode_frame = ttk.Frame(self.episode_canvas)
+        self.episode_canvas = tk.Canvas(
+            episode_holder,
+            background=THEME["surface"],
+            highlightthickness=1,
+            highlightbackground=THEME["line"],
+            highlightcolor=THEME["primary"],
+        )
+        self.episode_frame = ttk.Frame(self.episode_canvas, style="Surface.TFrame")
         self.episode_scroll = ttk.Scrollbar(episode_holder, orient="vertical", command=self.episode_canvas.yview)
         self.episode_canvas.configure(yscrollcommand=self.episode_scroll.set)
         self.episode_canvas.grid(row=0, column=0, sticky="nsew")
-        self.episode_scroll.grid(row=0, column=1, sticky="ns")
+        self.episode_scroll.grid(row=0, column=1, sticky="ns", padx=(8, 0))
         self.episode_window = self.episode_canvas.create_window((0, 0), window=self.episode_frame, anchor="nw")
         self.episode_frame.bind("<Configure>", self.update_episode_scroll)
         self.episode_canvas.bind("<Configure>", self.resize_episode_frame)
         main.add(right, weight=2)
 
-        bottom = ttk.LabelFrame(self, text="下载设置")
-        bottom.grid(row=3, column=0, sticky="ew", padx=10, pady=6)
+        bottom = ttk.LabelFrame(page, text="下载设置", style="Section.TLabelframe", padding=(14, 10, 14, 12))
+        bottom.grid(row=4, column=0, sticky="ew", pady=(12, 0))
         bottom.columnconfigure(1, weight=1)
 
         self.download_dir_var = tk.StringVar(value=self.config_data.get("download_dir", str(Path.cwd() / "downloads")))
@@ -286,30 +426,42 @@ class DownloaderApp(tk.Tk):
         self.with_related_var = tk.BooleanVar(value=bool(self.config_data.get("with_related", True)))
         self.ch_convert_var = tk.StringVar(value=str(self.config_data.get("ch_convert", 1)))
 
-        ttk.Label(bottom, text="目录").grid(row=0, column=0, padx=8, pady=8, sticky="w")
-        ttk.Entry(bottom, textvariable=self.download_dir_var).grid(row=0, column=1, padx=8, pady=8, sticky="ew")
-        ttk.Button(bottom, text="选择", command=self.choose_download_dir).grid(row=0, column=2, padx=8, pady=8)
-        ttk.Checkbutton(bottom, text="整合第三方弹幕", variable=self.with_related_var).grid(row=0, column=3, padx=8, pady=8)
-        ttk.Label(bottom, text="简繁").grid(row=0, column=4, padx=(12, 4), pady=8)
+        ttk.Label(bottom, text="目录", style="Surface.TLabel").grid(row=0, column=0, padx=(0, 8), pady=7, sticky="w")
+        ttk.Entry(bottom, textvariable=self.download_dir_var).grid(row=0, column=1, padx=(0, 10), pady=7, sticky="ew")
+        ttk.Button(bottom, text="选择", style="Tool.TButton", command=self.choose_download_dir).grid(row=0, column=2, padx=(0, 12), pady=7)
+        ttk.Checkbutton(bottom, text="整合第三方弹幕", variable=self.with_related_var).grid(row=0, column=3, padx=(0, 12), pady=7)
+        ttk.Label(bottom, text="简繁", style="Surface.TLabel").grid(row=0, column=4, padx=(0, 6), pady=7)
         ttk.Combobox(
             bottom,
             width=8,
             state="readonly",
             textvariable=self.ch_convert_var,
             values=("0", "1", "2"),
-        ).grid(row=0, column=5, padx=4, pady=8)
-        ttk.Label(bottom, text="间隔秒").grid(row=0, column=6, padx=(12, 4), pady=8)
-        ttk.Spinbox(bottom, from_=0.5, to=10, increment=0.5, width=6, textvariable=self.interval_var).grid(row=0, column=7, padx=4, pady=8)
-        ttk.Button(bottom, text="下载 JSON + XML", command=self.start_download).grid(row=0, column=8, padx=8, pady=8)
+        ).grid(row=0, column=5, padx=(0, 12), pady=7)
+        ttk.Label(bottom, text="间隔秒", style="Surface.TLabel").grid(row=0, column=6, padx=(0, 6), pady=7)
+        ttk.Spinbox(bottom, from_=0.5, to=10, increment=0.5, width=6, textvariable=self.interval_var).grid(row=0, column=7, padx=(0, 12), pady=7)
+        ttk.Button(bottom, text="下载 JSON + XML", style="Success.TButton", command=self.start_download).grid(row=0, column=8, pady=7)
 
-        log_frame = ttk.LabelFrame(self, text="日志")
-        log_frame.grid(row=4, column=0, sticky="nsew", padx=10, pady=(6, 10))
+        log_frame = ttk.LabelFrame(page, text="日志", style="Section.TLabelframe", padding=(10, 8, 10, 10))
+        log_frame.grid(row=5, column=0, sticky="nsew", pady=(12, 0))
         log_frame.columnconfigure(0, weight=1)
         log_frame.rowconfigure(0, weight=1)
-        self.log_text = tk.Text(log_frame, height=9, wrap="word")
+        self.log_text = tk.Text(
+            log_frame,
+            height=8,
+            wrap="word",
+            bd=0,
+            bg=THEME["log_bg"],
+            fg=THEME["log_fg"],
+            insertbackground=THEME["log_fg"],
+            relief=tk.FLAT,
+            padx=12,
+            pady=10,
+            font=("Consolas", 10),
+        )
         self.log_text.grid(row=0, column=0, sticky="nsew")
         log_scroll = ttk.Scrollbar(log_frame, orient="vertical", command=self.log_text.yview)
-        log_scroll.grid(row=0, column=1, sticky="ns")
+        log_scroll.grid(row=0, column=1, sticky="ns", padx=(8, 0))
         self.log_text.configure(yscrollcommand=log_scroll.set)
 
     def update_episode_scroll(self, _event=None):
