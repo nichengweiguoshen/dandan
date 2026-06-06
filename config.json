@@ -1,0 +1,9 @@
+{
+  "app_id": "x9bdpxq8pv",
+  "app_secret": "********************************",
+  "auth_mode": "signature",
+  "download_dir": "D:\\Games\\game\\弹弹play字幕下载\\downloads",
+  "interval_seconds": 1.5,
+  "with_related": true,
+  "ch_convert": 1
+}
